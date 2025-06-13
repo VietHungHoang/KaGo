@@ -90,7 +90,20 @@ class LessonListFrame(tk.Frame):
             messagebox.showerror("Lỗi", message)
 
     def load_lessons(self):
-        # Load all lesson from data directory
-        # Currently, it only delete mock data
+        """Load all lessons from the service"""
+
+        # Delete existing item to refresh
         for item in self.tree.get_children():
             self.tree.delete(item)
+        
+        # Get the list of lessons from service
+        all_lessons = self.lesson_service.get_all_lessons()
+        
+        # Iterate through each lesson and add it to the Treeview
+        if not all_lessons:
+            # Display a message if there are no lessons yet
+            self.tree.insert('', tk.END, values=("Chưa có bài học nào. Hãy thêm một bài mới!", ""), tags=('placeholder',))
+            self.tree.tag_configure('placeholder', foreground='grey')
+        else:
+            for lesson in all_lessons:
+                self.tree.insert('', tk.END, values=(lesson.name, f"{lesson.progress_percent}%"))

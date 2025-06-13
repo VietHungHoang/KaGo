@@ -56,6 +56,60 @@ class LessonService:
         except Exception as e:
             return None, f"Đã xảy ra lỗi: {e}"
 
+
+    def get_all_lessons(self):
+        """Get a list of all existing lessons"""
+        lessons = []
+        # Scan all CSV files in the lessons directory
+        for csv_path in self.lessons_dir.glob("*.csv"):
+            lesson_id = csv_path.stem
+            
+            # Create a simple Lesson object
+            lesson_name = lesson_id.replace("_", " ").title()
+            lesson = Lesson(lesson_id, lesson_name, str(csv_path))
+            
+            # Read the corresponding file progress to update progress
+            progress_data = self._read_progress_file(lesson_id)
+            if progress_data:
+                lesson.progress_percent = self._calculate_completion_percent(progress_data)
+            
+            lessons.append(lesson)
+        
+        return lessons
+
+    def _read_progress_file(self, lesson_id):
+        # Read the content from the JSON progress file
+        progress_path = self.progress_dir / f"progress_{lesson_id}.json"
+        if not progress_path.exists():
+            return None
+        
+        try:
+            with open(progress_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return None
+
+    def _calculate_completion_percent(self, progress_data):
+        # Caculates the completion percentage
+        # This feature will be improved later
+        # For now, mock with 1
+        required_streak = 1
+        
+        progress_map = progress_data.get("current_progress", {})
+        if not progress_map:
+            return 0
+
+        completed_cards = 0
+        for card_hash, card_data in progress_map.items():
+            if card_data.get("correct_streak", 0) >= required_streak:
+                completed_cards += 1
+        
+        total_cards = len(progress_map)
+        if total_cards == 0:
+            return 0
+        
+        return int((completed_cards / total_cards) * 100)
+
     def _read_cards_from_csv(self, filepath):
         cards = []
         with open(filepath, mode='r', encoding='utf-8') as csvfile:
