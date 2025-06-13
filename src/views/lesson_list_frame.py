@@ -1,11 +1,15 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from src.services.lesson_service import LessonService
 
 class LessonListFrame(tk.Frame):
     def __init__(self, parent, controller):
         """Initalize the frame"""
         super().__init__(parent)
         self.controller = controller
+
+        # Initialize lesson service
+        self.lesson_service = LessonService()
 
         """--- Config layout with grid ---"""
         # Column 1 (the list) will take up all extra horizontal space
@@ -30,12 +34,12 @@ class LessonListFrame(tk.Frame):
         # Search bar and Add new button
         search_frame = ttk.Frame(self)
         search_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 10))
-        search_frame.grid_columnconfigure(2, weight=1)
+        search_frame.grid_columnconfigure(0, weight=1)
 
         search_entry = ttk.Entry(search_frame, font=("Arial", 16))
         search_entry.grid(row=0, column=0, sticky="ew", ipady=8)
 
-        add_new_button = ttk.Button(search_frame, text="Thêm mới", width=8)
+        add_new_button = ttk.Button(search_frame, text="Thêm mới", width=8, command=self.add_new_lesson)
         add_new_button.grid(row=0, column=1, padx=(10, 12))
         
         # Frame to contain the list of lessons (using a Treeview)
@@ -69,3 +73,24 @@ class LessonListFrame(tk.Frame):
         scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscroll=scrollbar.set)
         scrollbar.grid(row=2, column=2, sticky='ns', padx=(0,10))
+        
+        # Load intital data
+        self.load_lessons()
+
+    def add_new_lesson(self):
+        """Even handler method for 'Thêm mới' buttonn click"""
+        new_lesson, message = self.lesson_service.import_lesson_from_csv()
+        
+        if new_lesson:
+            # If success, add to the Treeview and show a success message
+            self.tree.insert('', tk.END, values=(new_lesson.name, f"{new_lesson.progress_percent}%"))
+            messagebox.showinfo("Thành công", message)
+        else:
+            # If failed, show an error message
+            messagebox.showerror("Lỗi", message)
+
+    def load_lessons(self):
+        # Load all lesson from data directory
+        # Currently, it only delete mock data
+        for item in self.tree.get_children():
+            self.tree.delete(item)
