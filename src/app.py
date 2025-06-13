@@ -1,6 +1,7 @@
 import tkinter as tk
 from src.config import APP_NAME, WINDOW_WIDTH, WINDOW_HEIGHT
 from src.views.home_frame import HomeFrame
+from src.views.lesson_list_frame import LessonListFrame
 
 class Application(tk.Tk):
     def __init__(self):
@@ -11,24 +12,24 @@ class Application(tk.Tk):
 
         # Create a main content where all the other frames (screens) will be stacked
         container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        container.pack(side="top", fill="both", expand=True, padx=(12, 2), pady=(0, 16))
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         # Dictionary to store the frames
         self.frames = {}
 
-        # Create and add HomeFrame to the dictionary
-        frame = HomeFrame(container, self)
-        self.frames[HomeFrame] = frame
-        frame.grid(row=0, column=0, sticky="nsew") # nsew = north, south, east, west
+        # Create and add all frames to the dictionary
+        for F in (HomeFrame, LessonListFrame):
+            frame = F(container, self)
+            self.frames[F.__name__] = frame # Use the Class name as the key
+            frame.grid(row=0, column=0, sticky="nsew")
 
-        # Show the first frame
-        self.show_frame(HomeFrame)
+        self.show_frame_by_class_name("HomeFrame")
 
-    def show_frame(self, frame_class):
-        """Show a created frame"""
-        frame = self.frames[frame_class]
+    def show_frame_by_class_name(self, class_name):
+        """Show a created frame based on its class name"""
+        frame = self.frames[class_name]
         frame.tkraise() # Raise the selected frame to the top.
 
     def center_window(self):

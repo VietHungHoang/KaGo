@@ -29,7 +29,7 @@ class HomeFrame(tk.Frame):
         practice_button = ttk.Button(
             content_frame,
             text="Luyện tập",
-            command=lambda: print("Go to the practice screen"),
+            command=lambda: self.controller.show_frame_by_class_name("LessonListFrame"),
             style="TButton"
         )
         practice_button.pack(pady=10)

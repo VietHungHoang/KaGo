@@ -8,6 +8,4 @@ venv/
 .venv/
 env/
 .env
-
-# User data (rất quan trọng, không đưa data của người dùng lên Github)
 data/
