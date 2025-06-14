@@ -68,6 +68,8 @@ class LessonListFrame(tk.Frame):
             self.tree.insert('', tk.END, values=lesson)
         
         self.tree.grid(row=2, column=0, columnspan=3, sticky='nsew', padx=10)
+        # Register listening event
+        self.tree.bind('<<TreeviewSelect>>', self.on_lesson_select)
 
         # Add scroll bar for list
         scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.tree.yview)
@@ -85,7 +87,7 @@ class LessonListFrame(tk.Frame):
             # If success, add to the Treeview and show a success message
             self.tree.insert('', tk.END, values=(new_lesson.name, f"{new_lesson.progress_percent}%"))
             messagebox.showinfo("Thành công", message)
-        else:
+        elif message:
             # If failed, show an error message
             messagebox.showerror("Lỗi", message)
 
@@ -106,4 +108,17 @@ class LessonListFrame(tk.Frame):
             self.tree.tag_configure('placeholder', foreground='grey')
         else:
             for lesson in all_lessons:
-                self.tree.insert('', tk.END, values=(lesson.name, f"{lesson.progress_percent}%"))
+                self.tree.insert('', tk.END, iid=lesson.id, values=(lesson.name, f"{lesson.progress_percent}%"))
+
+    def on_lesson_select(self, event):
+        """"Event handler for when a lesson is selected """
+        selected_items = self.tree.selection()
+        if not selected_items: 
+            return
+
+        lesson_id = selected_items[0]
+        self.controller.start_practice_session(lesson_id)
+
+
+
+

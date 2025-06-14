@@ -24,7 +24,8 @@ class LessonService:
             filetypes=[("CSV Files", "*.csv")]
         )
         if not filepath:
-            return None, "Không có file nào được chọn."
+            # No file was selected
+            return None, ""
 
         try:
             # Create new filename and destination path
@@ -76,6 +77,25 @@ class LessonService:
             lessons.append(lesson)
         
         return lessons
+
+
+    def get_lesson_by_id(self, lesson_id):
+        """Find and load the full details of a lesson"""
+        csv_path = self.lessons_dir / f"{lesson_id}.csv"
+        if not csv_path.exists():
+            return None
+
+        # Create lesson from lesson id
+        lesson = Lesson(lesson_id, lesson_id.title(), str(csv_path))
+
+        # Create cards in lesson
+        lesson.cards = self._read_cards_from_csv(csv_path)
+
+        progress_data = self._read_progress_file(lesson_id)
+        if progress_data:
+             lesson.progress_percent = self._calculate_completion_percent(progress_data)
+
+        return lesson
 
     def _read_progress_file(self, lesson_id):
         # Read the content from the JSON progress file
