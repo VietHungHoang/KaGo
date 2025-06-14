@@ -1,12 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
+import random
+from src.services.text_service import TextService
 
 class PracticeFrame(tk.Frame):
 	def __init__(self, parent, controller):
 		super().__init__(parent)
 		self.controller = controller
+		self.text_service = TextService()
+
+		# State variables for the learning session
 		self.current_lesson = None
-		self.current_card_index = 0
+		self.current_card = None
+		self.waiting_for_next_card = False
 
 		""" --- Layout config --- """
 
@@ -17,28 +23,29 @@ class PracticeFrame(tk.Frame):
 
 		# Back button
 		top_bar = ttk.Frame(self)
-		top_bar.grid(row=0, column=0, sticky="ew", padx=10, pady=(24, 24))
-		quit_button = ttk.Button(top_bar, text="Thoát", width=5, command=lambda: self.controller.show_frame_by_class_name("LessonListFrame"))
+		top_bar.grid(row=0, column=0, sticky="ew", padx=10, pady=(24, 12))
+		quit_button = ttk.Button(top_bar, text="Thoát", width=5, command=self.quit_session)
 		quit_button.pack(side="left")
 
 		# Main frame contain question
 		main_content_frame = ttk.Frame(self)
-		main_content_frame.grid(row=1, column=0, sticky="nsew", padx=(10, 20), pady=30)
+		main_content_frame.grid(row=1, column=0, sticky="nsew", padx=(10, 20), pady=20)
 		main_content_frame.grid_columnconfigure(0, weight=1)
 
 		# Question label
 		question_frame = ttk.Frame(main_content_frame)
-		question_frame.pack(fill="x", pady=(20, 20))
+		question_frame.pack(fill="x", pady=(20, 10))
 
-		self.question_label = ttk.Label(question_frame, text="Question", font=("Arial", 36, "bold"), anchor="center")
-		self.question_label.pack(expand=True, fill="x")
+		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center")
+		self.question_label.pack(pady=(20, 10), fill="x")
 
 		# Input field
-		self.answer_entry = ttk.Entry(main_content_frame, font=("Arial", 20))
-		self.answer_entry.pack(fill="x", ipady=10)
+		self.answer_entry = ttk.Entry(main_content_frame, font=("Arial", 24))
+		self.answer_entry.pack(fill="x", ipady=10, pady=16, padx=8)
+		self.answer_entry.bind("<Return>", self.check_answer_or_continue)
 
 		# Result 
-		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 20), anchor="center")
+		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 24, "bold"), anchor="center", justify="center")
 		self.result_label.pack(pady=10)
 
 		# Explanation
@@ -51,14 +58,70 @@ class PracticeFrame(tk.Frame):
 	def start_session(self, lesson):
 		"""Start learning sesson"""
 		self.current_lesson = lesson
+		# Update: Get the list of incomplete cards
+		self.active_cards = list(self.current_lesson.cards)
 		self.show_next_card()
+
+	def check_answer_or_continue(self, event=None):
+		# Check the answer or continue after a wrong answer
+		if self.waiting_for_next_card:
+			self.show_next_card()
+			return
+
+		user_answer = self.answer_entry.get().strip()
+		if not user_answer:
+			return
+
+		# Normalize the user's answer and the correct answers
+		normalized_user_answer = self.text_service.normalize_japanese_text(user_answer)
+		correct_answers = [self.text_service.normalize_japanese_text(ans) for ans in self.current_card.answer.split(';')]
+
+		is_correct = normalized_user_answer in correct_answers
+
+		# Display result
+		if is_correct:
+			self.result_label.config(text="Đúng!", foreground="green")
+			# Update: Call service to update progress
+			
+			# Automatically move to the next card after 2 seconds
+			self.after(2000, self.show_next_card)
+		else:
+			self.result_label.config(text=f"Sai!\n {self.current_card.answer}", foreground="red")
+			# Update: Call service to update progress
+			
+			# Set the waiting flag, requiring the user to press Enter to continue.
+			self.waiting_for_next_card = True
+		
+		self.explanation_label.config(text=self.current_card.explanation)
+		self.romaji_button.pack(pady=10)
 
 	def show_next_card(self):
 		"""Show the next question"""
-		# For now, display the first card
-		if self.current_lesson and self.current_lesson.cards:
-			card = self.current_lesson.cards[self.current_card_index]
-			self.question_label.config(text=card.question)
-		else:
-			self.question_label.config(text="Không có câu hỏi nào trong bài học này.")
+		self.reset_ui_for_new_card()
 
+		if not self.active_cards:
+			self.question_label.config(text="Chúc mừng! Bạn đã hoàn thành bài học!")
+			self.answer_entry.pack_forget()
+			return
+			
+		# Get a random card and remove it from the active list
+		self.current_card = random.choice(self.active_cards)
+		self.active_cards.remove(self.current_card)
+
+		# Display the new question
+		self.question_label.config(text=self.current_card.question)
+
+	def reset_ui_for_new_card(self):
+		# Clean up the UI for the new question
+		self.waiting_for_next_card = False
+		self.result_label.config(text="")
+		self.explanation_label.config(text="")
+		self.romaji_button.pack_forget() # Hidden romaji button
+		self.answer_entry.config(state="normal")
+		self.answer_entry.delete(0, tk.END)
+		self.answer_entry.focus_set() # Automatically focus to entry
+
+	def quit_session(self):
+		# Method to exit the learning session
+		# Update: Show confirm dialog
+		self.controller.show_frame_by_class_name("LessonListFrame")
