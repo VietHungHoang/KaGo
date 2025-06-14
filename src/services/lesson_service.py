@@ -1,5 +1,5 @@
 import csv
-import os
+import logging
 import shutil
 import json
 from pathlib import Path
@@ -83,6 +83,7 @@ class LessonService:
         """Find and load the full details of a lesson"""
         csv_path = self.lessons_dir / f"{lesson_id}.csv"
         if not csv_path.exists():
+            logging.error("ERROR: Lesson CSV file does not exist.")
             return None
 
         # Create lesson from lesson id
@@ -132,12 +133,13 @@ class LessonService:
 
     def _read_cards_from_csv(self, filepath):
         cards = []
-        with open(filepath, mode='r', encoding='utf-8') as csvfile:
+        with open(filepath, mode='r', encoding='utf-8-sig') as csvfile:
             reader = csv.DictReader(csvfile)
             # Convert header names to lowercase for flexibility
-            reader.fieldnames = [field.lower() for field in reader.fieldnames]
-            
+            reader.fieldnames = [field.lower().strip() for field in reader.fieldnames]
+            print(reader.fieldnames)
             if 'question' not in reader.fieldnames or 'answer' not in reader.fieldnames:
+                print("Lỗi: File CSV không chứa cột 'question' hoặc 'answer'.")
                 return []
 
             for i, row in enumerate(reader):
