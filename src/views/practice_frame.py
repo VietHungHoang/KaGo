@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import random
 from src.services.text_service import TextService
 
@@ -7,13 +7,11 @@ class PracticeFrame(tk.Frame):
 	def __init__(self, parent, controller):
 		super().__init__(parent)
 		self.controller = controller
-		self.text_service = TextService()
+		self.init_variables()
+		self.init_ui()
 
-		# State variables for the learning session
-		self.current_lesson = None
-		self.current_card = None
-		self.waiting_for_next_card = False
-
+	def init_ui(self):
+		"""Initialize the UI components"""
 		""" --- Layout config --- """
 
 		self.grid_rowconfigure(1, weight=1)
@@ -54,13 +52,34 @@ class PracticeFrame(tk.Frame):
 
 		# Show romaji button
 		self.romaji_button = ttk.Button(main_content_frame, text="Romaji")
-
-	def start_session(self, lesson):
+  
+	def init_variables(self):
+		"""Initialize variables for the learning session"""
+		self.current_lesson = None
+		self.current_card = None
+		self.waiting_for_next_card = False
+  
+		self.text_service = TextService()
+		self.practice_service = self.controller.practice_service
+  
+	def start_session(self, lesson, streak_of_cards):
 		"""Start learning sesson"""
 		self.current_lesson = lesson
-		# Update: Get the list of incomplete cards
-		self.active_cards = list(self.current_lesson.cards)
+		self.streak_of_cards = streak_of_cards
 		self.show_next_card()
+  
+	def show_next_card(self):
+		"""Show the next question"""
+		self.reset_ui_for_new_card()
+		self.streak_of_cards = {k:v for k, v in self.streak_of_cards.items() if v < self.practice_service.required_streak_for_mastery}
+
+		if not self.streak_of_cards:
+			self.quit_session(completed=True) # Exit when completed
+			return
+
+		key = random.choice(list(self.streak_of_cards.keys()))
+		self.current_card = self.current_lesson.get_card_by_hash(key)
+		self.question_label.config(text=self.current_card.question)
 
 	def check_answer_or_continue(self, event=None):
 		# Check the answer or continue after a wrong answer
@@ -81,35 +100,17 @@ class PracticeFrame(tk.Frame):
 		# Display result
 		if is_correct:
 			self.result_label.config(text="Đúng!", foreground="green")
-			# Update: Call service to update progress
+			self.streak_of_cards[self.current_card.get_hash()] += 1
 			
 			# Automatically move to the next card after 2 seconds
 			self.after(2000, self.show_next_card)
 		else:
 			self.result_label.config(text=f"Sai!\n {self.current_card.answer}", foreground="red")
-			# Update: Call service to update progress
-			
 			# Set the waiting flag, requiring the user to press Enter to continue.
 			self.waiting_for_next_card = True
-		
+			
 		self.explanation_label.config(text=self.current_card.explanation)
 		self.romaji_button.pack(pady=10)
-
-	def show_next_card(self):
-		"""Show the next question"""
-		self.reset_ui_for_new_card()
-
-		if not self.active_cards:
-			self.question_label.config(text="Chúc mừng! Bạn đã hoàn thành bài học!")
-			self.answer_entry.pack_forget()
-			return
-			
-		# Get a random card and remove it from the active list
-		self.current_card = random.choice(self.active_cards)
-		self.active_cards.remove(self.current_card)
-
-		# Display the new question
-		self.question_label.config(text=self.current_card.question)
 
 	def reset_ui_for_new_card(self):
 		# Clean up the UI for the new question
@@ -121,7 +122,10 @@ class PracticeFrame(tk.Frame):
 		self.answer_entry.delete(0, tk.END)
 		self.answer_entry.focus_set() # Automatically focus to entry
 
-	def quit_session(self):
-		# Method to exit the learning session
-		# Update: Show confirm dialog
+	def quit_session(self, completed=False):
+		self.practice_service.update_lesson_progress(self.current_lesson.id, self.streak_of_cards)
+		if completed:
+			messagebox.showinfo("Hoàn thành", "Chúc mừng! Bạn đã hoàn thành tất cả các thẻ trong bài học này!")
+
+		self.controller.frames["LessonListFrame"].load_lessons()
 		self.controller.show_frame_by_class_name("LessonListFrame")

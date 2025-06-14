@@ -56,17 +56,6 @@ class LessonListFrame(tk.Frame):
         self.tree.heading('progress', text='Tiến độ')
         self.tree.column('progress', width=100, anchor=tk.CENTER)
 
-        # Add sample data
-        sample_lessons = [
-            ("Từ vựng N5 - Bài 1", "25%"),
-            ("Kanji sơ cấp", "78%"),
-            ("Ngữ pháp Minna no Nihongo - Bài 10", "0%"),
-            ("Từ vựng N4 - Động từ", "100%")
-        ]
-
-        for lesson in sample_lessons:
-            self.tree.insert('', tk.END, values=lesson)
-        
         self.tree.grid(row=2, column=0, columnspan=3, sticky='nsew', padx=10)
         # Register listening event
         self.tree.bind('<<TreeviewSelect>>', self.on_lesson_select)
@@ -113,11 +102,29 @@ class LessonListFrame(tk.Frame):
     def on_lesson_select(self, event):
         """"Event handler for when a lesson is selected """
         selected_items = self.tree.selection()
-        if not selected_items: 
+        if not selected_items:
             return
-
+        
         lesson_id = selected_items[0]
-        self.controller.start_practice_session(lesson_id)
+        
+        # Get progress info
+        progress_text = self.tree.item(lesson_id, "values")[1]
+        
+        if progress_text != "0%":
+            # Display select dialog
+            user_choice = messagebox.askquestion(
+                "Lựa chọn", 
+                "Bạn muốn tiếp tục phiên học trước không?",
+                icon='question', 
+                type='yesnocancel'
+            )
+            
+            if user_choice == 'yes':
+                self.controller.start_practice_session(lesson_id, start_over=False)
+            elif user_choice == 'no':
+                self.controller.start_practice_session(lesson_id, start_over=True)
+        else:
+            self.controller.start_practice_session(lesson_id, start_over=False)
 
 
 

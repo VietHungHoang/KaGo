@@ -5,6 +5,7 @@ from src.views.home_frame import HomeFrame
 from src.views.lesson_list_frame import LessonListFrame
 from src.views.practice_frame import PracticeFrame
 from src.services.lesson_service import LessonService
+from src.services.practice_service import PracticeService
 
 class Application(tk.Tk):
     def __init__(self):
@@ -14,6 +15,8 @@ class Application(tk.Tk):
         self.center_window()
 
         self.lesson_service = LessonService()
+        self.practice_service = PracticeService()
+
 
         # Create a main content where all the other frames (screens) will be stacked
         container = tk.Frame(self)
@@ -32,15 +35,25 @@ class Application(tk.Tk):
 
         self.show_frame_by_class_name("HomeFrame")
 
-    def start_practice_session(self, lesson_id):
+    def start_practice_session(self, lesson_id, start_over=False):
         """Coordinator method to start a practice session"""
         lesson = self.lesson_service.get_lesson_by_id(lesson_id)
-        if lesson and lesson.cards:
-            practice_frame = self.frames["PracticeFrame"]
-            practice_frame.start_session(lesson)
-            self.show_frame_by_class_name("PracticeFrame")
-        else:
-            messagebox.showerror("Lỗi!", f"Không thể tải bài học {lesson_id} hoặc bài học không có câu hỏi nào.")
+        if not lesson:
+            print(f"Lỗi: Không thể tải bài học {lesson_id}.")
+            return
+
+        if start_over:
+            # If start_over, reset the lesson progress
+            self.practice_service.reset_lesson_progress(lesson_id)
+
+        # Get the list of cards to practice
+        streak_of_cards = self.practice_service.get_streak_of_cards(lesson_id, lesson.cards, start_over)
+
+        # if cards_to_practice:
+        practice_frame = self.frames["PracticeFrame"]
+        # Pass list of cards to practice frame
+        practice_frame.start_session(lesson, streak_of_cards)
+        self.show_frame_by_class_name("PracticeFrame")
 
 
     def show_frame_by_class_name(self, class_name):
