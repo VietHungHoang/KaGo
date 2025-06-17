@@ -21,37 +21,37 @@ class PracticeFrame(tk.Frame):
 
 		# Back button
 		top_bar = ttk.Frame(self)
-		top_bar.grid(row=0, column=0, sticky="ew", padx=10, pady=(24, 12))
+		top_bar.grid(row=0, column=0, sticky="ew", padx=200, pady=(48, 0))
 		quit_button = ttk.Button(top_bar, text="Thoát", width=5, command=self.quit_session)
 		quit_button.pack(side="left")
 
 		# Main frame contain question
 		main_content_frame = ttk.Frame(self)
-		main_content_frame.grid(row=1, column=0, sticky="nsew", padx=(10, 20), pady=20)
+		main_content_frame.grid(row=1, column=0, sticky="nsew", padx=200, pady= (100, 20))
 		main_content_frame.grid_columnconfigure(0, weight=1)
 
 		# Question label
 		question_frame = ttk.Frame(main_content_frame)
 		question_frame.pack(fill="x", pady=(20, 10))
 
-		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center")
+		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center", wraplength=1000)
 		self.question_label.pack(pady=(20, 10), fill="x")
 
 		# Input field
-		self.answer_entry = ttk.Entry(main_content_frame, font=("Arial", 24))
+		self.answer_entry = ttk.Entry(main_content_frame, font=("Arial", 32))
 		self.answer_entry.pack(fill="x", ipady=10, pady=16, padx=8)
 		self.answer_entry.bind("<Return>", self.check_answer_or_continue)
 
 		# Result 
-		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 24, "bold"), anchor="center", justify="center")
-		self.result_label.pack(pady=10)
+		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 28, "bold"), anchor="center", justify="center")
+		self.result_label.pack(pady=(20, 10))
 
 		# Explanation
 		self.explanation_label = ttk.Label(main_content_frame, text="", font=("Arial", 20, "italic"), anchor="center", wraplength=500)
 		self.explanation_label.pack(pady=10)
 
 		# Show romaji button
-		self.romaji_button = ttk.Button(main_content_frame, text="Romaji")
+		self.romaji_button = ttk.Button(main_content_frame, text="Giải thích")
   
 	def init_variables(self):
 		"""Initialize variables for the learning session"""
@@ -110,7 +110,7 @@ class PracticeFrame(tk.Frame):
 			self.waiting_for_next_card = True
 			
 		self.explanation_label.config(text=self.current_card.explanation)
-		self.romaji_button.pack(pady=10)
+		self.romaji_button.pack()
 
 	def reset_ui_for_new_card(self):
 		# Clean up the UI for the new question

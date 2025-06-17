@@ -11,9 +11,12 @@ class Application(tk.Tk):
     def __init__(self):
         super().__init__()
 
+
         self.title(APP_NAME)
         self.center_window()
-
+        self.withdraw()
+        self.state('zoomed')
+        self.deiconify()
         self.lesson_service = LessonService()
         self.practice_service = PracticeService()
 
@@ -69,4 +72,13 @@ class Application(tk.Tk):
         x_coordinate = int((screen_width / 2) - (WINDOW_WIDTH / 2))
         y_coordinate = int((screen_height / 2) - (WINDOW_HEIGHT / 2))
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x_coordinate}+{y_coordinate}")
+
+
+
+
+
+
+
+
+
 

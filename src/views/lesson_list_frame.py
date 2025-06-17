@@ -21,7 +21,7 @@ class LessonListFrame(tk.Frame):
 
         # Back button and Header
         top_frame = ttk.Frame(self)
-        top_frame.grid(row=0, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
+        top_frame.grid(row=0, column=0, columnspan=3, sticky="ew", padx=200, pady=30)
         top_frame.config(height=80)
         top_frame.grid_propagate(False)
         
@@ -33,7 +33,7 @@ class LessonListFrame(tk.Frame):
 
         # Search bar and Add new button
         search_frame = ttk.Frame(self)
-        search_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 10))
+        search_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=200, pady=(0, 10))
         search_frame.grid_columnconfigure(0, weight=1)
 
         search_entry = ttk.Entry(search_frame, font=("Arial", 16))
@@ -45,8 +45,8 @@ class LessonListFrame(tk.Frame):
         # Frame to contain the list of lessons (using a Treeview)
         # Set custom style for Treeview
         style = ttk.Style()
-        style.configure("Treeview", font=("Arial", 14), rowheight=30, padding=[10, 0])
-        style.configure("Treeview.Heading", font=("Arial", 14, "bold"))
+        style.configure("Treeview", font=("Arial", 16), rowheight=40, padding=[10, 0])
+        style.configure("Treeview.Heading", font=("Arial", 16, "bold"))
 
         columns = ('lesson_name', 'progress')
         self.tree = ttk.Treeview(self, columns=columns, show='headings')
@@ -55,8 +55,9 @@ class LessonListFrame(tk.Frame):
         self.tree.heading('lesson_name', text='Tên bài học')
         self.tree.heading('progress', text='Tiến độ')
         self.tree.column('progress', width=100, anchor=tk.CENTER)
+        self.tree.column('lesson_name', anchor=tk.CENTER)
 
-        self.tree.grid(row=2, column=0, columnspan=3, sticky='nsew', padx=10)
+        self.tree.grid(row=2, column=0, columnspan=3, sticky='nsew', padx=200)
         # Register listening event
         self.tree.bind('<<TreeviewSelect>>', self.on_lesson_select)
 
