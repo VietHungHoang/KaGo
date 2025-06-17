@@ -45,6 +45,7 @@ class PracticeFrame(tk.Frame):
 		# Result 
 		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 28, "bold"), anchor="center", justify="center")
 		self.result_label.pack(pady=(20, 10))
+		self.result_label.bind("<Button-1>", self.convert_answer)
 
 		# Explanation
 		self.explanation_label = ttk.Label(main_content_frame, text="", font=("Arial", 20, "italic"), anchor="center", wraplength=1000)
@@ -135,3 +136,16 @@ class PracticeFrame(tk.Frame):
 
 		self.controller.frames["LessonListFrame"].load_lessons()
 		self.controller.show_frame_by_class_name("LessonListFrame")
+  
+	def convert_answer(self, event=None):
+		# Translate the user's answer using the text service
+		try:
+			answer = self.result_label["text"][6::]
+			if answer == self.current_card.answer:
+				answer = self.text_service.normalize_japanese_text(self.current_card.answer)
+			else:
+				answer = self.current_card.answer
+			self.result_label.config(text=f"Sai!\n {answer}", foreground="red")
+		except Exception:
+			print("Error: ", Exception)
+		
