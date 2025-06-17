@@ -34,7 +34,7 @@ class PracticeFrame(tk.Frame):
 		question_frame = ttk.Frame(main_content_frame)
 		question_frame.pack(fill="x", pady=(20, 10))
 
-		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center", wraplength=1000)
+		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center", wraplength=1200)
 		self.question_label.pack(pady=(20, 10), fill="x")
 
 		# Input field
@@ -47,11 +47,10 @@ class PracticeFrame(tk.Frame):
 		self.result_label.pack(pady=(20, 10))
 
 		# Explanation
-		self.explanation_label = ttk.Label(main_content_frame, text="", font=("Arial", 20, "italic"), anchor="center", wraplength=500)
-		self.explanation_label.pack(pady=10)
+		self.explanation_label = ttk.Label(main_content_frame, text="", font=("Arial", 20, "italic"), anchor="center", wraplength=1000)
 
 		# Show romaji button
-		self.romaji_button = ttk.Button(main_content_frame, text="Giải thích")
+		self.explanation_button = ttk.Button(main_content_frame, text="Giải thích", command=self.show_explanation)
   
 	def init_variables(self):
 		"""Initialize variables for the learning session"""
@@ -91,6 +90,8 @@ class PracticeFrame(tk.Frame):
 		if not user_answer:
 			return
 
+		self.answer_entry.config(state="readonly")  # Disable input while checking
+
 		# Normalize the user's answer and the correct answers
 		normalized_user_answer = self.text_service.normalize_japanese_text(user_answer)
 		correct_answers = [self.text_service.normalize_japanese_text(ans) for ans in self.current_card.answer.split(';')]
@@ -108,16 +109,21 @@ class PracticeFrame(tk.Frame):
 			self.result_label.config(text=f"Sai!\n {self.current_card.answer}", foreground="red")
 			# Set the waiting flag, requiring the user to press Enter to continue.
 			self.waiting_for_next_card = True
-			
+		if self.current_card.explanation:
+			self.explanation_button.pack()
+
+	def show_explanation(self):
+		# Show the explanation for the current card
+		self.explanation_button.pack_forget()
 		self.explanation_label.config(text=self.current_card.explanation)
-		self.romaji_button.pack()
+		self.explanation_label.pack(pady=10)
 
 	def reset_ui_for_new_card(self):
 		# Clean up the UI for the new question
 		self.waiting_for_next_card = False
 		self.result_label.config(text="")
-		self.explanation_label.config(text="")
-		self.romaji_button.pack_forget() # Hidden romaji button
+		self.explanation_label.pack_forget() # Hide explanation label
+		self.explanation_button.pack_forget() # Hidden explanation button
 		self.answer_entry.config(state="normal")
 		self.answer_entry.delete(0, tk.END)
 		self.answer_entry.focus_set() # Automatically focus to entry
