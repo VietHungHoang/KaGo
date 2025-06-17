@@ -79,7 +79,7 @@ class PracticeFrame(tk.Frame):
 
 		key = random.choice(list(self.streak_of_cards.keys()))
 		self.current_card = self.current_lesson.get_card_by_hash(key)
-		self.question_label.config(text=self.current_card.question)
+		self.question_label.config(text=self.current_card.question.capitalize())
 
 	def check_answer_or_continue(self, event=None):
 		# Check the answer or continue after a wrong answer
@@ -94,8 +94,8 @@ class PracticeFrame(tk.Frame):
 		self.answer_entry.config(state="readonly")  # Disable input while checking
 
 		# Normalize the user's answer and the correct answers
-		normalized_user_answer = self.text_service.normalize_japanese_text(user_answer)
-		correct_answers = [self.text_service.normalize_japanese_text(ans) for ans in self.current_card.answer.split(';')]
+		normalized_user_answer = self.text_service.normalize_japanese_text(user_answer.strip().lower())
+		correct_answers = [self.text_service.normalize_japanese_text(ans.strip().lower()) for ans in self.current_card.answer.split(';')]
 
 		is_correct = normalized_user_answer in correct_answers
 
