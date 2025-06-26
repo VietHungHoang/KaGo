@@ -24,6 +24,12 @@ class PracticeFrame(tk.Frame):
 		top_bar.grid(row=0, column=0, sticky="ew", padx=200, pady=(48, 0))
 		quit_button = ttk.Button(top_bar, text="Thoát", width=5, command=self.quit_session)
 		quit_button.pack(side="left")
+		self.total_label = ttk.Label(top_bar, text="sdgd", font=("Arial", 32, "bold"))
+		self.correct_count_label = ttk.Label(top_bar, text="", font=("Arial", 24, "bold"), foreground="green")
+		self.incorrect_count_label = ttk.Label(top_bar, text="", font=("Arial", 24, "bold"), foreground="red")
+		self.total_label.pack(pady=(60, 0))
+		self.correct_count_label.pack(side="top", anchor="w", padx=(1250, 0))
+		self.incorrect_count_label.pack(side="top", anchor="w", padx=(1250, 0), pady=(20, 0))
 
 		# Main frame contain question
 		main_content_frame = ttk.Frame(self)
@@ -32,7 +38,7 @@ class PracticeFrame(tk.Frame):
 
 		# Question label
 		question_frame = ttk.Frame(main_content_frame)
-		question_frame.pack(fill="x", pady=(20, 10))
+		question_frame.pack(fill="x", pady=(0, 10))
 
 		self.question_label = ttk.Label(question_frame, text="...", font=("Arial", 36, "bold"), anchor="center", wraplength=1200)
 		self.question_label.pack(pady=(20, 10), fill="x")
@@ -46,6 +52,9 @@ class PracticeFrame(tk.Frame):
 		self.result_label = ttk.Label(main_content_frame, text="", font=("Arial", 28, "bold"), anchor="center", justify="center")
 		self.result_label.pack(pady=(20, 10))
 		self.result_label.bind("<Button-1>", self.convert_answer)
+  
+  		# Show skip button
+		self.skip_button = ttk.Button(main_content_frame, text="Bỏ qua", command=self.skip_card, width=6)
 
 		# Explanation
 		self.explanation_label = ttk.Label(main_content_frame, text="", font=("Arial", 20, "italic"), anchor="center", wraplength=1000)
@@ -80,6 +89,10 @@ class PracticeFrame(tk.Frame):
 		key = random.choice(list(self.streak_of_cards.keys()))
 		self.current_card = self.current_lesson.get_card_by_hash(key)
 		self.question_label.config(text=self.current_card.question.capitalize())
+		self.total_label.config(text=f"Còn lại: {len(self.streak_of_cards)}")
+		self.correct_count_label.config(text=f"Đúng: {self.current_card.correct}")
+		self.incorrect_count_label.config(text=f"Sai: {self.current_card.incorrect}")
+		self.skip_button.pack(pady=10)
 
 	def check_answer_or_continue(self, event=None):
 		# Check the answer or continue after a wrong answer
@@ -92,6 +105,7 @@ class PracticeFrame(tk.Frame):
 			return
 
 		self.answer_entry.config(state="readonly")  # Disable input while checking
+		self.skip_button.pack_forget()
 
 		# Normalize the user's answer and the correct answers
 		normalized_user_answer = self.text_service.normalize_japanese_text(user_answer.strip().lower())
@@ -103,13 +117,14 @@ class PracticeFrame(tk.Frame):
 		if is_correct:
 			self.result_label.config(text="Đúng!", foreground="green")
 			self.streak_of_cards[self.current_card.get_hash()] += 1
-			
+			self.current_card.correct += 1
 			# Automatically move to the next card after 2 seconds
 			self.after(2000, self.show_next_card)
 		else:
 			self.result_label.config(text=f"Sai!\n {self.current_card.answer}", foreground="red")
 			# Set the waiting flag, requiring the user to press Enter to continue.
 			self.waiting_for_next_card = True
+			self.current_card.incorrect += 1
 		if self.current_card.explanation:
 			self.explanation_button.pack()
 
@@ -130,7 +145,7 @@ class PracticeFrame(tk.Frame):
 		self.answer_entry.focus_set() # Automatically focus to entry
 
 	def quit_session(self, completed=False):
-		self.practice_service.update_lesson_progress(self.current_lesson.id, self.streak_of_cards)
+		self.practice_service.update_lesson_progress(self.current_lesson, self.streak_of_cards)
 		if completed:
 			messagebox.showinfo("Hoàn thành", "Chúc mừng! Bạn đã hoàn thành tất cả các thẻ trong bài học này!")
 
@@ -148,4 +163,8 @@ class PracticeFrame(tk.Frame):
 			self.result_label.config(text=f"Sai!\n {answer}", foreground="red")
 		except Exception:
 			print("Error: ", Exception)
+	
+	def skip_card(self, event=None):
+		self.streak_of_cards[self.current_card.get_hash()] = 3
+		self.after(2000, self.show_next_card)
 		

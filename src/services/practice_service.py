@@ -28,9 +28,9 @@ class PracticeService:
         
         return cards_streaks 
 
-    def update_lesson_progress(self, lesson_id, streak_of_cards):
+    def update_lesson_progress(self, lesson, streak_of_cards):
         # Update progress for a specific card in a lesson
-        progress_data = self._read_progress_file(lesson_id)
+        progress_data = self._read_progress_file(lesson.id)
         if not progress_data:
             return
 
@@ -38,8 +38,10 @@ class PracticeService:
         for card_hash in progress_map:
             streak = streak_of_cards.get(card_hash, 3)
             progress_map[card_hash]["correct_streak"] = streak
+            progress_map[card_hash]["correct"] = lesson.get_card_by_hash(card_hash).correct
+            progress_map[card_hash]["incorrect"] = lesson.get_card_by_hash(card_hash).incorrect
 
-        self._save_progress_file(lesson_id, progress_data)
+        self._save_progress_file(lesson.id, progress_data)
 
     def reset_lesson_progress(self, lesson_id):
         # Reset the progress for a lesson

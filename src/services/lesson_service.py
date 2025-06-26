@@ -114,7 +114,7 @@ class LessonService:
         # Caculates the completion percentage
         # This feature will be improved later
         # For now, mock with 1
-        required_streak = 1
+        required_streak = 3
         
         progress_map = progress_data.get("current_progress", {})
         if not progress_map:

@@ -7,6 +7,8 @@ class Card:
         self.question = str(question).strip()
         self.answer = str(answer).strip()
         self.explanation = str(explanation).strip()
+        self.correct = 0
+        self.incorrect = 0
     
     def get_hash(self):
         """Create a unique identifier for this card based on its content to track 
